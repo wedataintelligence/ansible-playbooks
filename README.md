@@ -1,6 +1,6 @@
 # Ansible Playbooks
 
-Find README.md in each role subfolder:
+Find **README.md** in each role subfolder:
 ```bash
 .
 ├── README.md
