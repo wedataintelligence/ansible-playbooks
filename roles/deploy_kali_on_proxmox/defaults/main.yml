@@ -1,0 +1,18 @@
+---
+# defaults file for deploy_kali_on_proxmox
+image_url: https://images.kali.org/virtual-images
+image_version: 2021.2
+compressed_image_name: kali-linux-{{ image_version }}-vmware-amd64.7z
+vmdk_image_name: Kali-Linux-{{ image_version }}-vmware-amd64.vmwarevm/Kali-Linux-{{ image_version }}-vmware-amd64.vmdk
+qcow2_image_name: kali-linux-{{ image_version }}-amd64.qcow2
+template_name: kali-linux-tpl
+vm_memory:
+vm_cores:
+vm_sockets:
+numa:
+# vars to check before create VM
+storage:
+VM_ID:
+network_bridge:
+#url_sshkey: https://github.com/your-repo/your-public-key
+#sha256sum_sshkey: sha256:your-public-key-hash

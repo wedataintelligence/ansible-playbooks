@@ -1,0 +1,108 @@
+---
+# tasks file for deploy_kali_on_proxmox
+- name: Print URL
+  debug:
+    msg: "{{ image_url }}/{{ compressed_image_name }}"
+
+- name: Get last Kali Linux image
+  ansible.builtin.get_url:
+    url: "{{ image_url }}/{{ compressed_image_name }}"
+    dest: /tmp/{{ compressed_image_name }}
+  tags:
+    - download
+
+- name: Decompress donwloaded image
+  ansible.builtin.shell: |
+    p7zip -d {{ compressed_image_name }}
+  args:
+    chdir: /tmp/
+  tags:
+    - create_vm
+
+- name: Convert image from vmdk to qcow2 format
+  ansible.builtin.shell: |
+    qemu-img convert -f vmdk {{ vmdk_image_name }} -O qcow2 {{ qcow2_image_name }}
+  args:
+    chdir: /tmp/
+  tags:
+    - create_vm
+
+- name: Create VM
+  ansible.builtin.shell: |
+    qm create {{ VM_ID }} -name {{ template_name }} -memory {{ vm_memory }} -net0 virtio,bridge={{ network_bridge }} -cores {{ vm_cores }} -sockets {{ vm_sockets }} -cpu cputype=host -kvm 1 -numa {{ numa }} -ostype l26
+  tags:
+    - create_vm
+
+- name: Import Disk to VM
+  ansible.builtin.shell: |
+    qm importdisk {{ VM_ID }} /tmp/{{ qcow2_image_name }} {{ storage }} --format qcow2
+  tags:
+    - import_disk
+
+- name: Add Disk to VM
+  ansible.builtin.shell: |
+    qm set {{ VM_ID }} -scsihw virtio-scsi-single --virtio0 {{ storage }}:vm-{{ VM_ID }}-disk-0,discard=on,cache=writeback,iothread=1
+  tags:
+    - add_disk
+
+# When `local` storage is used
+# - name: Add Disk to VM
+#   ansible.builtin.shell: |
+#     qm set {{ VM_ID }} -scsihw virtio-scsi-single --virtio0 {{ storage }}:{{ VM_ID }}/vm-{{ VM_ID }}-disk-0.qcow2,discard=on,cache=writeback,iothread=1
+#   tags:
+#     - add_disk
+
+
+- name: Set params to VM
+  ansible.builtin.shell: |
+    qm set {{ VM_ID }} -serial0 socket
+    qm set {{ VM_ID }} -boot c -bootdisk virtio0
+    qm set {{ VM_ID }} -agent 1
+    qm set {{ VM_ID }} -hotplug disk,network,usb,memory,cpu
+    qm set {{ VM_ID }} -vga qxl
+  tags:
+    - set_params
+# qm set {{ VM_ID }} -ide2 {{ storage }}:cloudinit
+
+
+- name: Set VM name
+  ansible.builtin.shell: |
+    qm set {{ VM_ID }} --name {{ template_name }}
+  tags:
+    - set_vm_name
+
+# - name: Resize VM
+#   ansible.builtin.shell: |
+#     qm resize {{ VM_ID }} virtio0 30G
+#   register: vm_size 
+#   ignore_errors: true
+#   tags:
+#     - resize_vm
+
+# - name: Change default user to root for CloudInit
+#   ansible.builtin.shell: |
+#     qm set {{ VM_ID }} --ciuser=root
+#   ignore_errors: true
+#   tags:
+#     - change_default_user
+
+# - name: Pull Public SSH key and check sha256sum 
+#   ansible.builtin.get_url:
+#     url: "{{ url_sshkey }}"
+#     dest: /tmp/sshkey.pub
+#     checksum: "{{ sha256sum_sshkey }}"
+#     force: yes
+#   tags:
+#     - add_sshkey
+
+# - name: Add Public SSH key to VM
+#   ansible.builtin.shell: |
+#     qm set {{ VM_ID }} --sshkey /tmp/sshkey.pub
+#   tags:
+#     - add_sshkey
+
+# - name: Create template {{ VM_ID }}
+#   ansible.builtin.shell: |
+#     qm template {{ VM_ID }}
+#   tags:
+#     - create_template
