@@ -1,0 +1,16 @@
+---
+# defaults file for deploy_debian10_on_proxmox
+image_url: https://cdimage.debian.org/cdimage/openstack/current
+image_name: debian-10-openstack-amd64.qcow2
+template_name: debian-10-tpl
+vm_memory:
+vm_cores:
+vm_sockets:
+numa:
+# vars to check before create VM
+storage:
+VM_ID:
+network_bridge:
+#url_sshkey: https://github.com/your-repo/your-public-key
+#sha256sum_sshkey: sha256:your-public-key-hash
+#ci_password:
