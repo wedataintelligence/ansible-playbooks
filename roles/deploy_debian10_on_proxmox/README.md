@@ -11,8 +11,7 @@ ansible-playbook ./deploy_debian10_on_proxmox.yml \
 -e ansible_ssh_port=22 \
 -e storage=local-zfs \
 -e VM_ID=1111 \
--e network_bridge-vmbr0 \
--e image_version=2021.2
+-e network_bridge-vmbr0
 ```
 
-- `ansible_ssh_port`, `storage`, `network_bridge` and `image_version` is set by default.
+- `ansible_ssh_port`, `storage` and `network_bridge` is set by default.
